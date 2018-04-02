@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Samples</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/cropper/2.3.3/cropper.css'>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    <style>
+        #commenterAvatarUpload img, #commenterAvatarPreview img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="col-md-2">
+            <div id="commenterAvatarUpload">
+                <!--https://dummyimage.com/200/bdbdbd/bdbdbd-->
+                <img src="public/images/avatar.png" id="commenterAvatarImageUploader" />
+                <input type="file" id="commenterAvatarImageFile" style="display:none;" />
+            </div>
+            <div id="commenterAvatarPreview" style="display:none;">
+                <img id="commenterAvatar" />
+                <input type="button" id="btnChangeCommenterAvatar" value="Change" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Core -->
+    <div class="modal fade" id="imageCropperModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <canvas id="canvas">
+                        Your browser does not support the HTML5 canvas element.
+                    </canvas>
+                    <input type="button" id="btnCropCommenterAvatar" value="Crop" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+
+    <!--<script src="public/plugin/jQuery/jquery-3.3.1.js"></script>-->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/cropper/2.3.3/cropper.js'></script>
+    <script>
+        $(function () {
+            $('#commenterAvatarImageUploader').on('click', function () {
+                $('#commenterAvatarImageFile').trigger('click');
+            });
+
+            var canvas = $("#canvas"),
+                context = canvas.get(0).getContext("2d");
+            var isChanged = false;
+            $('#commenterAvatarImageFile').on('change', function () {
+
+                if (this.files && this.files[0]) {
+                    if (this.files[0].type.match(/^image\//)) {
+                        //Prepare Page
+                        $('#imageCropperModal').modal({
+                            backdrop: 'static',
+                            keyword: false
+                        });
+                        //$('#commenterAvatarPreview').show();
+                        $('#commenterAvatarUpload').hide();
+
+                        //Read File
+                        var reader = new FileReader();
+                        reader.onload = function (evt) {
+                            var img = new Image();
+                            img.onload = function () {
+                                context.canvas.height = img.height;
+                                context.canvas.width = img.width;
+                                context.drawImage(img, 0, 0);
+                                var cropper = canvas.cropper({
+                                    aspectRatio: 1 / 1
+                                });
+                                $('#btnCropCommenterAvatar').click(function () {
+                                    // Get a string base 64 data url
+                                    var croppedImageDataURL = canvas.cropper('getCroppedCanvas').toDataURL("image/png");
+                                    $('#commenterAvatar').attr('src', croppedImageDataURL);
+
+                                    //Prepare Page
+                                    $('#imageCropperModal').modal('hide');
+                                    $('#commenterAvatarPreview').show();
+                                });
+
+                                $('#btnChangeCommenterAvatar').on('click', function () {
+                                    $('#commenterAvatarPreview').hide();
+                                    $('#commenterAvatarUpload').show();
+                                    $('#commenterAvatarImageFile').val('');
+                                    isChanged = true;
+                                });
+                            };
+                            if (isChanged) {
+                                canvas.cropper('replace', evt.target.result);
+                            }
+                            else {
+                                img.src = evt.target.result;
+                            }
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                    else {
+                        alert("Invalid file type! Please select an image file.");
+                    }
+                }
+                else {
+                    alert('No file(s) selected.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
